@@ -10,7 +10,7 @@ local plugin = require("kong.plugins.base_plugin"):extend()
 -- constructor
 function plugin:new()
   plugin.super.new(self, "myPlugin")  --TODO: change "myPlugin" to the name of the plugin here
-  
+
   -- do initialization here, runs in the 'init_by_lua_block', before worker processes are forked
 
 end
@@ -26,13 +26,13 @@ end
 ---------------------------------------------------------------------------------------------
 
 
---[[ handles more initialization, but AFTER the worker process has been forked/created.
+---[[ handles more initialization, but AFTER the worker process has been forked/created.
 -- It runs in the 'init_worker_by_lua_block'
 function plugin:init_worker()
   plugin.super.access(self)
-
   -- your custom code here
-  
+  -- the following line doesn't result in random values
+  -- math.randomseed()
 end --]]
 
 --[[ runs in the ssl_certificate_by_lua_block handler
@@ -40,27 +40,31 @@ function plugin:certificate(plugin_conf)
   plugin.super.access(self)
 
   -- your custom code here
-  
+
 end --]]
 
 --[[ runs in the 'rewrite_by_lua_block' (from version 0.10.2+)
 -- IMPORTANT: during the `rewrite` phase neither the `api` nor the `consumer` will have
--- been identified, hence this handler will only be executed if the plugin is 
+-- been identified, hence this handler will only be executed if the plugin is
 -- configured as a global plugin!
 function plugin:rewrite(plugin_conf)
   plugin.super.rewrite(self)
 
   -- your custom code here
-  
+
 end --]]
 
 ---[[ runs in the 'access_by_lua_block'
 function plugin:access(plugin_conf)
   plugin.super.access(self)
-
+  -- The following line results in random values, but writes a warning in the debug log
+  -- globalpatches.lua:211: randomseed(): math.randomseed() must be called in init_worker context
+  -- math.randomseed()
+  ngx.req.set_header("Random-1", tostring(math.random()))
+  ngx.req.set_header("Random-2", tostring(math.random()))
   -- your custom code here
   ngx.req.set_header("Hello-World", "this is on a request")
-  
+
 end --]]
 
 ---[[ runs in the 'header_filter_by_lua_block'
@@ -77,7 +81,7 @@ function plugin:body_filter(plugin_conf)
   plugin.super.access(self)
 
   -- your custom code here
-  
+
 end --]]
 
 --[[ runs in the 'log_by_lua_block'
@@ -85,7 +89,7 @@ function plugin:log(plugin_conf)
   plugin.super.access(self)
 
   -- your custom code here
-  
+
 end --]]
 
 
